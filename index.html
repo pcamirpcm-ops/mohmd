@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شخصی - amirmohmd</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Tahoma, Arial, sans-serif;
+    text-align: center;
+    color: #222;
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+}
+
+header {
+    background: #2563eb;
+    color: white;
+    padding: 30px;
+    border-radius: 0 0 25px 25px;
+}
+
+header h1 { margin: 0; font-size: 36px; }
+
+header p {
+    direction: ltr;
+    font-size: 14px;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    margin: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover { background: #1d4ed8; }
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #bbb;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+#login {
+    background: white;
+    width: 320px;
+    max-width: 92%;
+    margin: 100px auto;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0 5px 20px #0002;
+}
+
+#site { display: none; }
+
+.layout {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    align-items: flex-start;
+}
+
+.sidebar {
+    width: 190px;
+    flex-shrink: 0;
+    padding: 15px 8px;
+    background: white;
+    border-radius: 15px;
+}
+
+.sidebar button { width: 95%; }
+
+.main { flex: 1; min-width: 0; }
+
+.notebook, .settings {
+    background: white;
+    padding: 22px;
+    border-radius: 18px;
+    box-shadow: 0 5px 20px #0001;
+}
+
+textarea {
+    width: 100%;
+    height: 300px;
+    padding: 12px;
+    border: 2px solid #bfdbfe;
+    border-radius: 10px;
+    font: 16px/2 Tahoma, Arial, sans-serif;
+    resize: vertical;
+}
+
+.settings {
+    display: none;
+    margin-top: 15px;
+}
+
+#error { color: red; }
+#message, #settingMessage { color: green; }
+
+@media (max-width: 600px) {
+    .layout { padding: 8px; gap: 8px; }
+    .sidebar { width: 115px; }
+    .notebook, .settings { padding: 10px; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="login">
+    <h2>🔒 ورود به سایت شخصی</h2>
+    <p>رمز عبور را وارد کن</p>
+
+    <form id="loginForm">
+        <input id="password" type="password"
+               placeholder="رمز ورود" autocomplete="off" required>
+        <button type="submit">ورود به سایت</button>
+    </form>
+
+    <p id="error"></p>
+</div>
+
+<div id="site">
+    <header>
+        <h1>شخصی</h1>
+        <p>amirmohmd</p>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <h3>⚙️ تنظیمات</h3>
+            <button type="button" id="settingsButton">🔑 تغییر رمز</button>
+            <button type="button" id="logoutButton">🔒 خروج</button>
+        </aside>
+
+        <main class="main">
+            <section class="notebook">
+                <h2>📒 دفترچه یادداشت من</h2>
+                <p>هر چیزی دوست داری اینجا بنویس.</p>
+
+                <textarea id="notes"
+                    placeholder="اینجا شروع به نوشتن کن..."></textarea>
+
+                <br>
+                <button type="button" id="saveButton">
+                    💾 ذخیره نوشته‌ها
+                </button>
+                <p id="message"></p>
+            </section>
+
+            <section class="settings" id="settingsPanel">
+                <h2>🔐 تغییر رمز عبور</h2>
+
+                <form id="changeForm">
+                    <input id="oldPass" type="password"
+                           placeholder="رمز فعلی" required>
+
+                    <input id="newPass" type="password"
+                           placeholder="رمز جدید، حداقل ۴ کاراکتر"
+                           minlength="4" required>
+
+                    <input id="confirmPass" type="password"
+                           placeholder="تکرار رمز جدید" required>
+
+                    <button type="submit">ذخیره رمز جدید</button>
+                </form>
+
+                <p id="settingMessage"></p>
+            </section>
+        </main>
+    </div>
+</div>
+
+<script>
+(function () {
+    const DEFAULT_PASSWORD = "2486";
+function getPassword() {
+        try {
+            const saved = localStorage.getItem("amirmohmd_password");
+            return saved === null ? DEFAULT_PASSWORD : saved;
+        } catch (e) {
+            return DEFAULT_PASSWORD;
+        }
+    }
+
+    function savePassword(value) {
+        try {
+            localStorage.setItem("amirmohmd_password", value);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    const $ = id => document.getElementById(id);
+
+    $("loginForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        if ($("password").value === getPassword()) {
+            $("login").style.display = "none";
+            $("site").style.display = "block";
+            $("error").textContent = "";
+            $("password").value = "";
+
+            try {
+                $("notes").value =
+                    localStorage.getItem("amirmohmd_notes") || "";
+            } catch (e) {
+                $("notes").value = "";
+            }
+        } else {
+            $("error").textContent = "رمز اشتباه است! دوباره امتحان کن.";
+            $("password").value = "";
+            $("password").focus();
+        }
+    });
+
+    $("saveButton").addEventListener("click", function () {
+        try {
+            localStorage.setItem("amirmohmd_notes", $("notes").value);
+            $("message").textContent = "نوشته‌ها ذخیره شدند!";
+        } catch (e) {
+            $("message").textContent = "ذخیره انجام نشد.";
+        }
+    });
+
+    $("settingsButton").addEventListener("click", function () {
+        $("settingsPanel").style.display =
+            $("settingsPanel").style.display === "block"
+                ? "none" : "block";
+    });
+
+    $("changeForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const oldPass = $("oldPass").value;
+        const newPass = $("newPass").value;
+        const confirmPass = $("confirmPass").value;
+
+        if (oldPass !== getPassword()) {
+            $("settingMessage").textContent = "رمز فعلی اشتباه است!";
+            return;
+        }
+
+        if (newPass.length < 4) {
+            $("settingMessage").textContent =
+                "رمز جدید باید حداقل ۴ کاراکتر باشد.";
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            $("settingMessage").textContent =
+                "رمزهای جدید یکسان نیستند!";
+            return;
+        }
+
+        if (!savePassword(newPass)) {
+            $("settingMessage").textContent =
+                "ذخیره رمز ناموفق بود.";
+            return;
+        }
+
+        $("settingMessage").textContent =
+            "رمز جدید ذخیره شد!";
+
+        $("oldPass").value = "";
+        $("newPass").value = "";
+        $("confirmPass").value = "";
+    });
+
+    $("logoutButton").addEventListener("click", function () {
+        $("site").style.display = "none";
+        $("login").style.display = "block";
+        $("settingsPanel").style.display = "none";
+        $("password").value = "";
+        $("error").textContent = "";
+        $("password").focus();
+    });
+})();
+</script>
+
+</body>
+</html>
